@@ -63,7 +63,7 @@ pip install -r requirements.txt
 ## Quick install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ctrl-hold-voice.git
+git clone https://github.com/cybersoulcs/ctrl-hold-voice.git
 cd ctrl-hold-voice
 ./install.sh
 ```

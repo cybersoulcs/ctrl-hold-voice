@@ -7,6 +7,7 @@ ExecStart=__PYTHON__ __DAEMON__
 Restart=always
 RestartSec=5
 Environment=DISPLAY=:1
+Environment=XAUTHORITY=__XAUTHORITY__
 Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/__UID__/bus
 Environment=VOICE_MIC_TARGET=__MIC_TARGET__
 Environment=VOICE_LLM_URL=http://127.0.0.1:8000/v1/chat/completions

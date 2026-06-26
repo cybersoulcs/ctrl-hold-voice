@@ -88,11 +88,36 @@ mkdir -p "$(dirname "$SERVICE_DST")"
 
 UID_NUM="$(id -u)"
 
+# ── Detect Xauthority ──────────────────────────────────────────
+# The X display cookie may live in several places depending on how
+# the session started: ~/.Xauthority (classic login),
+# /run/user/<uid>/gdm/Xauthority (GDM X session), or
+# /run/user/<uid>/.mutter-Xwaylandauth.* (Xwayland under Mutter).
+XAUTHORITY_PATH="${XAUTHORITY:-}"
+if [[ -z "$XAUTHORITY_PATH" ]]; then
+    for candidate in \
+        "${HOME}/.Xauthority" \
+        "/run/user/${UID_NUM}/gdm/Xauthority" \
+        /run/user/"${UID_NUM}"/.mutter-Xwaylandauth.* ; do
+        if [[ -f "$candidate" ]]; then
+            XAUTHORITY_PATH="$candidate"
+            break
+        fi
+    done
+fi
+if [[ -z "$XAUTHORITY_PATH" ]]; then
+    warn "No Xauthority file found. The daemon may fail to connect to the X server."
+    warn "Set XAUTHORITY before running install.sh if you know the path."
+    XAUTHORITY_PATH="${HOME}/.Xauthority"
+fi
+ok "Xauthority: ${XAUTHORITY_PATH}"
+
 sed \
     -e "s|__PYTHON__|${PYTHON}|g" \
     -e "s|__DAEMON__|${INSTALL_DAEMON}|g" \
     -e "s|__UID__|${UID_NUM}|g" \
     -e "s|__MIC_TARGET__|${MIC_TARGET}|g" \
+    -e "s|__XAUTHORITY__|${XAUTHORITY_PATH}|g" \
     "$SERVICE_SRC" > "$SERVICE_DST"
 
 ok "Service generated: ${SERVICE_DST}"
