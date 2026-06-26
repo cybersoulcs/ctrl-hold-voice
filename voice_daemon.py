@@ -28,30 +28,10 @@ PASTE_MODS = os.environ.get("VOICE_PASTE_MODS", "ctrl+shift")  # ctrl, shift, or
 
 _dpy = None
 _model = None
-_clip = None
 
 
-def get_clip():
-    """Persistent GTK clipboard handle: avoids spawning a subprocess per input."""
-    import sys as _sys
-    if '/usr/lib/python3/dist-packages' not in _sys.path:
-        _sys.path.insert(0, '/usr/lib/python3/dist-packages')
-    global _clip
-    if _clip is None:
-        import gi
-        gi.require_version('Gtk', '3.0')
-        from gi.repository import Gtk, Gdk, GLib
-        _clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-    return _clip
 
 
-def set_clipboard_text(text):
-    clip = get_clip()
-    clip.set_text(text, -1)
-    clip.store()
-    from gi.repository import GLib
-    while GLib.MainContext.default().iteration(False):
-        pass
 
 
 def get_dpy():
@@ -120,8 +100,12 @@ def notify(msg):
 def paste_text(text):
     if not text:
         return
-    set_clipboard_text(text)
-    time.sleep(0.05)
+    # Use the standalone clipboard helper as a subprocess. GTK clipboard
+    # operations require a running GLib main loop, which this polling
+    # daemon does not have, so an in-process approach would hang.
+    clipboard_helper = os.path.join(os.path.dirname(os.path.abspath(__file__)), "clipboard_set.py")
+    subprocess.run(["python3", clipboard_helper], input=text, text=True)
+    time.sleep(0.1)
     dpy = get_dpy()
     mods = PASTE_MODS.split("+")
     mod_keys = {

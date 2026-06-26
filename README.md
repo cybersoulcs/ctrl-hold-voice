@@ -89,15 +89,15 @@ Benchmarked on NVIDIA GB10 (aarch64, Jetson class), 3-second utterance:
 | Whisper `medium` (beam=1, CUDA) | ~0.15s |
 | Whisper `medium` (beam=5, CUDA) | ~0.35s |
 | LLM correction (short sentence) | ~0.18s |
-| Clipboard + paste | ~0.15s |
-| **Total (release → text appears)** | **~0.5s** |
+| Clipboard + paste | ~0.30s |
+| **Total (release → text appears)** | **~0.6s** |
 
 ## File structure
 
 ```
 ctrl-hold-voice/
 ├── voice_daemon.py          # Core daemon: key detection, recording, transcription, paste
-├── clipboard_set.py         # Standalone clipboard helper (fallback)
+├── clipboard_set.py         # Clipboard helper (GTK3, runs as subprocess)
 ├── install.sh               # Interactive installer
 ├── uninstall.sh             # Clean uninstaller
 ├── requirements.txt         # Python dependencies
