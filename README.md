@@ -78,7 +78,7 @@ All settings are environment variables, set in the generated systemd service fil
 | `VOICE_LLM_ENABLED` | `1` | `1` to run LLM post-processing, `0` to disable |
 | `VOICE_LLM_URL` | `http://127.0.0.1:8000/...` | OpenAI-compatible API endpoint |
 | `VOICE_LLM_MODEL` | `default` | Model name for the LLM endpoint |
-| `VOICE_PASTE_MODS` | `ctrl+shift` | Modifier keys for paste. Some apps need `ctrl` only |
+| `VOICE_PASTE_MODS` | `ctrl` | Modifier keys for paste (`ctrl`, `shift`, `ctrl+shift`). Ctrl+V works in virtually all apps |
 
 ## Performance
 

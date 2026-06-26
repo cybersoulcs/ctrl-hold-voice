@@ -24,7 +24,7 @@ WHISPER_DEVICE = os.environ.get("VOICE_WHISPER_DEVICE", "cuda")
 WHISPER_BEAM_SIZE = int(os.environ.get("VOICE_BEAM_SIZE", "1"))
 WHISPER_LANGUAGE = os.environ.get("VOICE_WHISPER_LANGUAGE", "zh")
 STATUS_FILE = os.environ.get("VOICE_STATUS_FILE", "/tmp/voice_status")
-PASTE_MODS = os.environ.get("VOICE_PASTE_MODS", "ctrl+shift")  # ctrl, shift, or ctrl+shift
+PASTE_MODS = os.environ.get("VOICE_PASTE_MODS", "ctrl")  # ctrl, shift, or ctrl+shift
 
 _dpy = None
 _model = None
