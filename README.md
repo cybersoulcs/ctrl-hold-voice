@@ -37,6 +37,29 @@ pip install -r requirements.txt
 
 > For GPU acceleration, follow the [PyTorch CUDA install guide](https://pytorch.org/get-started/locally/) for your platform.
 
+> **⚠️ Important: this installer remaps GNOME Terminal's paste shortcut.**
+>
+> If you have GNOME Terminal installed, `install.sh` will change its paste
+> keybinding from `Ctrl+Shift+V` to `Ctrl+V`. This is **global to your
+> desktop session** — every app using GNOME Terminal (including Codex,
+> any TUI tools, `tmux`/`screen` running inside the terminal, etc.) will
+> use `Ctrl+V` to paste after this runs.
+>
+> Why: the voice daemon synthesizes a `Ctrl+V` keystroke to paste the
+> transcribed text. If your terminal only recognizes `Ctrl+Shift+V`,
+> that synthetic event is silently ignored and the text never appears.
+> Aligning the terminal to `Ctrl+V` makes the paste work.
+>
+> The original value is backed up to
+> `~/.config/voice-input/gnome-terminal-paste-original` and is restored
+> by `uninstall.sh`.
+>
+> Skip this step by setting `SKIP_TERMINAL_REMAP=1` before running
+> `install.sh`, or revert manually with:
+> ```
+> gsettings set org.gnome.Terminal.Legacy.Keybindings:/org/gnome/terminal/legacy/keybindings/ paste '<Control><Shift>v'
+> ```
+
 ## Quick install
 
 ```bash
@@ -144,3 +167,11 @@ Removes the daemon, service, and extension. Restart GNOME Shell to clear the ind
 ## License
 
 [MIT](LICENSE)
+| `VOICE_PASTE_MODS` | `ctrl` | Modifier keys for paste (`ctrl`, `shift`, `ctrl+shift`). Ctrl+V works in virtually all apps |
+
+#### Installer-only environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SKIP_TERMINAL_REMAP` | `0` | Set to `1` to skip the GNOME Terminal paste remap during install |
+| `VOICE_PYTHON` | *(auto)* | Override Python interpreter if auto-detection fails |
