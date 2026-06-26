@@ -12,10 +12,56 @@ Hold Ctrl ──▶ Record (PipeWire) ──▶ Transcribe (Whisper GPU) ──�
 
 The daemon stays resident so the Whisper model loads **once** at startup (~3s) and stays warm in GPU memory. Every subsequent dictation skips model loading entirely.
 
+Two models cooperate, both running locally on your own hardware:
+
+- **Whisper** does the actual speech-to-text. It runs **in-process** on your GPU, loads once at daemon startup (~3 s), and stays resident so later dictations skip loading entirely.
+- **The LLM** is a **separate local service** that exposes an OpenAI-compatible chat API (default `http://127.0.0.1:8000`). It receives Whisper's text and fixes typos and punctuation. It is optional — if it is unreachable, the daemon pastes the raw transcription unchanged.
+
+> ⚠️ **The LLM is *not* the speech-to-text engine.** Whisper is. The LLM only cleans up the text *after* Whisper transcribes it. Want raw transcription only? Set `VOICE_LLM_ENABLED=0`.
+
+## Models
+
+This project relies on **two** local models. You don't need to download either by hand, but you do need the hardware, and (for the LLM) a running server.
+
+### 1. Whisper (required) — speech-to-text
+
+Bundled through the `openai-whisper` package. The daemon loads it in-process on your GPU.
+
+- **No manual download** — model weights are fetched automatically on first run and cached under `~/.cache/whisper`.
+- Pick a size with `VOICE_WHISPER_MODEL` (`tiny` → `large`; default `medium`). Bigger means more accurate and more VRAM.
+- Runs on CUDA by default (`VOICE_WHISPER_DEVICE=cuda`); a CPU fallback works but is ~10x slower.
+
+### 2. Local LLM (optional) — text polish
+
+A **separate OpenAI-compatible server you run yourself**, pointed at by `VOICE_LLM_URL` (default `http://127.0.0.1:8000/v1/chat/completions`). It receives Whisper's transcription and returns a cleaned-up version. If the server is missing or unreachable, the daemon silently falls back to the raw transcription.
+
+The only contract the server must satisfy:
+
+- Listen on `http://127.0.0.1:8000`
+- Implement the OpenAI `POST /v1/chat/completions` endpoint
+- Return the corrected text in `choices[0].message.content`
+
+Bring it up with any tool you like — all of these expose the same endpoint:
+
+```bash
+# vLLM — GPU, OpenAI-compatible out of the box
+vllm serve Qwen2.5-7B-Instruct --port 8000
+
+# llama.cpp server
+./llama-server -m model.gguf --port 8000
+
+# Ollama (OpenAI-compatible /v1 endpoint)
+OLLAMA_HOST=127.0.0.1:8000 ollama serve   # then: ollama run qwen2.5
+
+# LM Studio: start the local server on port 8000 (Local Server tab)
+```
+
+Any OpenAI-compatible model works; a small instruct model (7B–14B) is plenty for proofreading. If `VOICE_LLM_MODEL` is set, make sure it matches the model id your server serves. To skip this stage entirely, set `VOICE_LLM_ENABLED=0`.
+
 ## Requirements
 
 - **Linux** with X11 (Wayland is not supported due to X11-based key detection)
-- **NVIDIA GPU** with CUDA (CPU fallback works but is ~10x slower)
+- **NVIDIA GPU** with CUDA — needed by Whisper (the speech-to-text engine). CPU fallback works but is ~10x slower. See [Models](#models) for the full picture.
 - **PipeWire** (`pw-record`) — standard on modern desktop Linux
 - **Python 3.10+**
 - **GNOME Shell 45/46/47** (only needed for the optional status indicator)
@@ -99,7 +145,7 @@ All settings are environment variables, set in the generated systemd service fil
 | `VOICE_BEAM_SIZE` | `1` | Decoding beam width. Lower = faster, slightly less accurate |
 | `VOICE_WHISPER_LANGUAGE` | `zh` | Language code for transcription |
 | `VOICE_LLM_ENABLED` | `1` | `1` to run LLM post-processing, `0` to disable |
-| `VOICE_LLM_URL` | `http://127.0.0.1:8000/...` | OpenAI-compatible API endpoint |
+| `VOICE_LLM_URL` | `http://127.0.0.1:8000/v1/chat/completions` | OpenAI-compatible chat endpoint. See [Models](#2-local-llm-optional--text-polish) for how to run your own |
 | `VOICE_LLM_MODEL` | `default` | Model name for the LLM endpoint |
 | `VOICE_PASTE_MODS` | `ctrl` | Modifier keys for paste (`ctrl`, `shift`, `ctrl+shift`). Ctrl+V works in virtually all apps |
 
