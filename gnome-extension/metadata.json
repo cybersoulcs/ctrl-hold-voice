@@ -1,0 +1,6 @@
+{
+    "uuid": "voice-indicator@ctrl-hold-voice",
+    "name": "Voice Input Indicator",
+    "description": "Shows voice input status (recording / transcribing / correcting) in the top bar",
+    "shell-version": ["45", "46", "47"]
+}

@@ -1,0 +1,5 @@
+openai-whisper>=20240930
+python3-xlib>=0.15
+numpy>=1.26
+requests>=2.31
+torch>=2.1
